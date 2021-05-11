@@ -5,3 +5,6 @@ class OneStream(Solution):
         self.knn_learn()
         self.mlp_learn()
         self.linear_learn()
+
+    def get_type(self):
+        return 'one stream'

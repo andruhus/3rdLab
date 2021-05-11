@@ -14,3 +14,6 @@ class MultiStream(Solution):
         p1.join()
         p2.join()
         p3.join()
+
+    def get_type(self):
+        return 'multistreaming'
