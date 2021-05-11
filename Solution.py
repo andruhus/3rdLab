@@ -55,3 +55,10 @@ class Solution:
         final_model.fit(self.X_train,self.y_train)
         return final_model.score(self.X_test,self.y_test),final - start
 
+
+
+    def print_results(self):
+        overal_score, overall_time = self.run()
+
+        print(f'We conducted ')
+
