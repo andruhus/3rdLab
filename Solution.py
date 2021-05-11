@@ -63,3 +63,8 @@ class Solution:
         type = self.get_type()
         print(f'We conducted {type} procedure for {overall_time} second(s) and got such an accuracy: {overal_score}')
 
+    def get_partial_accuracy(self):
+        print(f'KNN: {self.accuracy[0]}')
+        print(f'MLPClassifier: {self.accuracy[1]}')
+        print(f'Linear Model: {self.accuracy[2]}')
+
