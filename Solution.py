@@ -1,11 +1,13 @@
 import pandas as pd
+import pickle
 from sklearn.model_selection import train_test_split
-
+from sklearn.neighbors import KNeighborsClassifier
 
 class Solution:
     def __init__(self):
         self.data = pd.read_csv('data/train.csv',index_col='PassengerId')
-        print(self.data.head(10))
+        self.models = [None,None,None]
+        self.accuracy = [None,None,None]
 
     def preprosses(self):
         y = self.data['Survived']
@@ -16,12 +18,20 @@ class Solution:
 
 
     def knn_learn(self):
-        pass
+        model = KNeighborsClassifier(n_neighbors=5)
+        model.fit(self.X_train,self.y_train)
+        self.accuracy[0] = model.score(self.X_test,self.y_test)
+        self.models.append[0] = model
+        pickle.dump(model, open('models/KNN.sav','wb'))
+
 
     def mpl_learn(self):
         pass
 
     def linear_model(self):
+        pass
+
+    def run(self):
         pass
 
 a = Solution()
