@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 
 class Solution:
     def __init__(self):
@@ -26,7 +27,11 @@ class Solution:
 
 
     def mpl_learn(self):
-        pass
+        model = MLPClassifier(hidden_layer_sizes=(150,50))
+        model.fit(self.X_train, self.y_train)
+        self.accuracy[1] = model.score(self.X_test, self.y_test)
+        self.models.append[1] = model
+        pickle.dump(model, open('models/MLPNN.sav', 'wb'))
 
     def linear_model(self):
         pass
