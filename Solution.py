@@ -1,28 +1,35 @@
 import pandas as pd
+import numpy as np
 import pickle
 import time
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import VotingClassifier
 from sklearn.preprocessing import OneHotEncoder
 
 class Solution:
     def __init__(self):
         self.data = pd.read_csv('data/train.csv',index_col='PassengerId')
+        # print(self.data.index.unique())
         self.models = [None,None,None]
         self.accuracy = [None,None,None]
 
     def preprosses(self):
         y = self.data['Survived']
         X = self.data.drop(columns = ['Survived','Ticket','Name','Cabin'])
+        categorical_features = ['Pclass', 'Sex', 'SibSp', 'Parch', 'Embarked']
+
         ohe = OneHotEncoder()
-        categorical_features = ['Pclass','Sex','SibSp','Parch','Embarked']
         temp = ohe.fit_transform(X[categorical_features])
         temp = pd.DataFrame(temp.toarray()[1:])
         X.index -= 1
-        X = pd.concat((X.drop(columns=categorical_features), temp), 1)
+        # X.index =  X.index.astype('int64')
+        # print(X[X.index.duplicated(keep=False)].index)
+
+        # raise Exception('Check this out')
+        X = pd.concat((X.drop(columns=categorical_features), temp),axis = 1)
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X,y,test_size=0.2,random_state=42)
 
@@ -31,23 +38,35 @@ class Solution:
 
     def knn_learn(self):
         model = KNeighborsClassifier(n_neighbors=5)
+        categorical_features = ['Pclass', 'Sex', 'SibSp', 'Parch', 'Embarked']
+        # for key in self.X_train.keys():
+        #     if key not in categorical_features:
+        #         print(np.any(np.isnan(np.array(self.X_train[key]))))
+        #         print(np.all(np.isfinite(np.array(self.X_train[key]))))
+        #         print()
+        for i in range(23):
+            self.X_train.loc[self.X_train[i].isna(),i] = 0
         model.fit(self.X_train,self.y_train)
         self.accuracy[0] = model.score(self.X_test,self.y_test)
-        self.models.append[0] = model
+        self.models[0] = model
         pickle.dump(model, open('models/KNN.sav','wb'))
 
     def mlp_learn(self):
         model = MLPClassifier(hidden_layer_sizes=(150,50))
+        for i in range(23):
+            self.X_train.loc[self.X_train[i].isna(),i] = 0
         model.fit(self.X_train, self.y_train)
         self.accuracy[1] = model.score(self.X_test, self.y_test)
-        self.models.append[1] = model
+        self.models[1] = model
         pickle.dump(model, open('models/MLPNN.sav', 'wb'))
 
     def linear_learn(self):
-        model = LinearRegression()
+        model = LogisticRegression()
+        for i in range(23):
+            self.X_train.loc[self.X_train[i].isna(),i] = 0
         model.fit(self.X_train, self.y_train)
         self.accuracy[2] = model.score(self.X_test, self.y_test)
-        self.models.append[2] = model
+        self.models[2] = model
         pickle.dump(model, open('models/LinReg.sav', 'wb'))
 
     def run(self):
@@ -55,9 +74,13 @@ class Solution:
         start = time.perf_counter()
         self.learn()
         final = time.perf_counter()
-        final_model = VotingClassifier(estimators=[('knn',self.models[0]),
-                                                   ('nn',self.models[1]), ('lin',self.models[2])],
+        final_model = VotingClassifier(estimators=[
+            ('knn',self.models[0]),
+            ('nn',self.models[1]),
+            ('log_reg',self.models[2])
+        ],
                                        voting='soft')
+        print(self.models)
         final_model.fit(self.X_train,self.y_train)
         return final_model.score(self.X_test,self.y_test),final - start
 
