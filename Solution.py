@@ -9,52 +9,41 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import VotingClassifier
 from sklearn.preprocessing import OneHotEncoder
 
+
 class Solution:
     def __init__(self):
-        self.data = pd.read_csv('data/train.csv',index_col='PassengerId')
-        # print(self.data.index.unique())
-        self.models = [None,None,None]
-        self.accuracy = [None,None,None]
+        self.data = pd.read_csv('data/train.csv', index_col='PassengerId')
+        self.models = [None, None, None]
+        self.accuracy = [None, None, None]
 
     def preprosses(self):
         y = self.data['Survived']
-        X = self.data.drop(columns = ['Survived','Ticket','Name','Cabin'])
+        X = self.data.drop(columns=['Survived', 'Ticket', 'Name', 'Cabin'])
         categorical_features = ['Pclass', 'Sex', 'SibSp', 'Parch', 'Embarked']
-
         ohe = OneHotEncoder()
         temp = ohe.fit_transform(X[categorical_features])
         temp = pd.DataFrame(temp.toarray()[1:])
         X.index -= 1
-        # X.index =  X.index.astype('int64')
-        # print(X[X.index.duplicated(keep=False)].index)
+        X = pd.concat((X.drop(columns=categorical_features), temp), axis=1)
 
-        # raise Exception('Check this out')
-        X = pd.concat((X.drop(columns=categorical_features), temp),axis = 1)
-
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X,y,test_size=0.2,random_state=42)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     def learn(self):
         pass
 
     def knn_learn(self):
         model = KNeighborsClassifier(n_neighbors=5)
-        categorical_features = ['Pclass', 'Sex', 'SibSp', 'Parch', 'Embarked']
-        # for key in self.X_train.keys():
-        #     if key not in categorical_features:
-        #         print(np.any(np.isnan(np.array(self.X_train[key]))))
-        #         print(np.all(np.isfinite(np.array(self.X_train[key]))))
-        #         print()
         for i in range(23):
-            self.X_train.loc[self.X_train[i].isna(),i] = 0
-        model.fit(self.X_train,self.y_train)
-        self.accuracy[0] = model.score(self.X_test,self.y_test)
+            self.X_train.loc[self.X_train[i].isna(), i] = 0
+        model.fit(self.X_train, self.y_train)
+        self.accuracy[0] = model.score(self.X_test, self.y_test)
         self.models[0] = model
-        pickle.dump(model, open('models/KNN.sav','wb'))
+        pickle.dump(model, open('models/KNN.sav', 'wb'))
 
     def mlp_learn(self):
-        model = MLPClassifier(hidden_layer_sizes=(150,50))
+        model = MLPClassifier(hidden_layer_sizes=(150, 50), max_iter=10000)
         for i in range(23):
-            self.X_train.loc[self.X_train[i].isna(),i] = 0
+            self.X_train.loc[self.X_train[i].isna(), i] = 0
         model.fit(self.X_train, self.y_train)
         self.accuracy[1] = model.score(self.X_test, self.y_test)
         self.models[1] = model
@@ -63,7 +52,7 @@ class Solution:
     def linear_learn(self):
         model = LogisticRegression()
         for i in range(23):
-            self.X_train.loc[self.X_train[i].isna(),i] = 0
+            self.X_train.loc[self.X_train[i].isna(), i] = 0
         model.fit(self.X_train, self.y_train)
         self.accuracy[2] = model.score(self.X_test, self.y_test)
         self.models[2] = model
@@ -71,18 +60,17 @@ class Solution:
 
     def run(self):
         self.preprosses()
-        start = time.perf_counter()
-        self.learn()
-        final = time.perf_counter()
+
+        duration = self.learn()
+
         final_model = VotingClassifier(estimators=[
-            ('knn',self.models[0]),
-            ('nn',self.models[1]),
-            ('log_reg',self.models[2])
+            ('knn', self.models[0]),
+            ('nn', self.models[1]),
+            ('log_reg', self.models[2])
         ],
-                                       voting='soft')
-        print(self.models)
-        final_model.fit(self.X_train,self.y_train)
-        return final_model.score(self.X_test,self.y_test),final - start
+            voting='soft')
+        final_model.fit(self.X_train, self.y_train)
+        return final_model.score(self.X_test, self.y_test), duration
 
     def get_type(self):
         pass
@@ -97,4 +85,3 @@ class Solution:
         print(f'KNN: {self.accuracy[0]}')
         print(f'MLPClassifier: {self.accuracy[1]}')
         print(f'Linear Model: {self.accuracy[2]}')
-
