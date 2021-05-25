@@ -6,6 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import VotingClassifier
+from sklearn.preprocessing import OneHotEncoder
 
 class Solution:
     def __init__(self):
@@ -15,9 +16,14 @@ class Solution:
 
     def preprosses(self):
         y = self.data['Survived']
-        X = self.data.drop(columns = ['Survived','Ticket'])
+        X = self.data.drop(columns = ['Survived','Ticket','Name','Cabin'])
+        ohe = OneHotEncoder()
         categorical_features = ['Pclass','Sex','SibSp','Parch','Embarked']
-        X = pd.concat((X, pd.get_dummies(X[categorical_features])), 1)
+        temp = ohe.fit_transform(X[categorical_features])
+        temp = pd.DataFrame(temp.toarray()[1:])
+        X.index -= 1
+        X = pd.concat((X.drop(columns=categorical_features), temp), 1)
+
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X,y,test_size=0.2,random_state=42)
 
     def learn(self):
